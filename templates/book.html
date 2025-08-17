@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+    const computerSelect = document.getElementById('computer_id');
+    const checkBtn = document.getElementById('check_btn');
+    const resultsDiv = document.getElementById('available_computers');
+    
+    checkBtn.addEventListener('click', function() {
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        
+        if (!startTime || !endTime) {
+            alert('Пожалуйста, укажите время начала и окончания');
+            return;
+        }
+        
+        fetch('{{ url_for("check_availability") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `start_time=${encodeURIComponent(startTime)}&end_time=${encodeURIComponent(endTime)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                return;
+            }
+            
+            if (data.available_computers.length === 0) {
+                resultsDiv.innerHTML = '<div class="alert alert-warning">Нет доступных компьютеров на выбранное время</div>';
+                return;
+            }
+            
+            let html = '<h4>Доступные компьютеры:</h4><div class="list-group">';
+            data.available_computers.forEach(computer => {
+                html += `
+                    <label class="list-group-item">
+                        <input class="form-check-input me-1" type="radio" name="computer_id" value="${computer.id}" required>
+                        ${computer.name} (${computer.specs})
+                    </label>
+                `;
+            });
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultsDiv.innerHTML = '<div class="alert alert-danger">Произошла ошибка при проверке доступности</div>';
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>Бронирование компьютера</h1>
+<form method="POST">
+    <div class="mb-3">
+        <label for="username" class="form-label">Ваше имя</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+    </div>
+    <div class="mb-3">
+        <label for="phone" class="form-label">Телефон</label>
+        <input type="tel" class="form-control" id="phone" name="phone" required>
+    </div>
+    <div class="row mb-3">
+        <div class="col">
+            <label for="start_time" class="form-label">Время начала</label>
+            <input type="datetime-local" class="form-control" id="start_time" name="start_time" value="{{ default_start }}" required>
+        </div>
+        <div class="col">
+            <label for="end_time" class="form-label">Время окончания</label>
+            <input type="datetime-local" class="form-control" id="end_time" name="end_time" value="{{ default_end }}" required>
+        </div>
+    </div>
+    <button type="button" id="check_btn" class="btn btn-secondary mb-3">Проверить доступность</button>
+    <div id="available_computers"></div>
+    <button type="submit" class="btn btn-primary mt-3">Забронировать</button>
+</form>
+{% endblock %}

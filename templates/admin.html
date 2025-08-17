@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Админ-панель{% endblock %}
+
+{% block content %}
+<h1>Админ-панель</h1>
+
+<h2 class="mt-4">Добавить компьютер</h2>
+<form method="POST" action="{{ url_for('add_computer') }}" class="mb-4">
+    <div class="row">
+        <div class="col-md-4">
+            <input type="text" name="name" class="form-control" placeholder="Название" required>
+        </div>
+        <div class="col-md-6">
+            <input type="text" name="specs" class="form-control" placeholder="Характеристики">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-success">Добавить</button>
+        </div>
+    </div>
+</form>
+
+<h2>Компьютеры</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Характеристики</th>
+            <th>Статус</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for computer in computers %}
+        <tr>
+            <td>{{ computer.id }}</td>
+            <td>{{ computer.name }}</td>
+            <td>{{ computer.specs }}</td>
+            <td>
+                {% if computer.is_active %}
+                    <span class="badge bg-success">Активен</span>
+                {% else %}
+                    <span class="badge bg-danger">Неактивен</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{{ url_for('toggle_computer', computer_id=computer.id) }}" class="btn btn-sm btn-warning">
+                    {% if computer.is_active %}Деактивировать{% else %}Активировать{% endif %}
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2 class="mt-4">Бронирования</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Пользователь</th>
+            <th>Компьютер</th>
+            <th>Время начала</th>
+            <th>Время окончания</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for booking in bookings %}
+        <tr>
+            <td>{{ booking.id }}</td>
+            <td>{{ booking.user.username }} ({{ booking.user.phone }})</td>
+            <td>{{ booking.computer.name }}</td>
+            <td>{{ booking.start_time.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>{{ booking.end_time.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>
+                <a href="{{ url_for('delete_booking', booking_id=booking.id) }}" class="btn btn-sm btn-danger">Удалить</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
